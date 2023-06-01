@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+    <body>
+
+        <canvas id="sequence-logo-canvas"></canvas>
+        <textarea id="ans" rows="18"> </textarea>
+        <input type="button" name="button" id="button" onclick="javascript: Send_OnClick();" value=" 確 認 " class="btn btn-success" />
+        <button id="downloadBtnpng">下載圖片(png)</button>
+        <button id="downloadBtnjpg">下載圖片(jpg)</button>
+        <button id="downloadBtn">下載圖片(SVG)</button>
+    </body>
+</html>
+<script>
+     document.getElementById("downloadBtnpng").addEventListener("click", function() {
+      var canvas = document.getElementById("sequence-logo-canvas");
+      var ctx = canvas.getContext("2d");
+      var pngImageData = canvas.toDataURL("image/png");
+      var pngLink = document.createElement("a");
+      pngLink.href = pngImageData;
+      pngLink.download = "canvas_image.png";
+      pngLink.click();
+     });
+     document.getElementById("downloadBtnjpg").addEventListener("click", function() {
+      var canvas = document.getElementById("sequence-logo-canvas");
+      var ctx = canvas.getContext("2d");
+      var pngImageData = canvas.toDataURL("image/jpeg");
+      var pngLink = document.createElement("a");
+      pngLink.href = pngImageData;
+      pngLink.download = "canvas_image.jpg";
+      pngLink.click();
+     });
+  document.getElementById("downloadBtn").addEventListener("click", function() {
+     var canvas = document.getElementById("sequence-logo-canvas");
+   
+// 獲取 2D 渲染上下文
+var ctx = canvas.getContext("2d");
+
+// 在畫布上繪製圖形
+//ctx.fillStyle = "red";
+//ctx.fillRect(10, 10, 100, 100);
+
+// 將 canvas 轉換為圖像數據 URL
+var imageDataURL = canvas.toDataURL("image/png");
+
+// 創建一個新的 <img> 元素
+var img = new Image();
+
+// 設置圖像數據 URL 為 <img> 元素的源
+img.src = imageDataURL;
+
+// 在圖像加載完成後執行以下代碼
+img.onload = function() {
+  // 創建一個新的 SVG 畫布
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svg.setAttribute("width", canvas.width);
+  svg.setAttribute("height", canvas.height);
+
+  // 在 SVG 畫布上繪製圖像
+  var svgImg = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  svgImg.setAttribute("x", "0");
+  svgImg.setAttribute("y", "0");
+  svgImg.setAttribute("width", canvas.width);
+  svgImg.setAttribute("height", canvas.height);
+  svgImg.setAttributeNS("http://www.w3.org/1999/xlink", "href", imageDataURL);
+  svg.appendChild(svgImg);
+
+  // 將 SVG 畫布的內容轉換為 XML 字串
+  var serializer = new XMLSerializer();
+  var svgString = serializer.serializeToString(svg);
+
+  // 創建下載連結
+  var svgBlob = new Blob([svgString], { type: "image/svg+xml" });
+  var svgUrl = URL.createObjectURL(svgBlob);
+  var downloadLink = document.createElement("a");
+  downloadLink.href = svgUrl;
+  downloadLink.download = "canvas_image.svg";
+  downloadLink.click();
+};
+});
+</script>
+<script>
+ function Send_OnClick() {
+  
+    var data = convertToSequenceData(document.getElementById("ans"));
+    console.log(data);
+            var options = {
+                "colors": jseqlogo.colors.aminoacids
+            };
+            sequence_logo(document.getElementById("ans"), 600, 200, data, options);
+
+
+            var canvas = document.getElementById("sequence-logo-canvas");
+
+// 獲取 2D 渲染上下文
+/*var ctx = canvas.getContext("2d");
+
+// 在畫布上繪製圖形
+//ctx.fillStyle = "red";
+//ctx.fillRect(10, 10, 100, 100);
+
+// 存為 JPG 檔案
+var jpgImageData = canvas.toDataURL("image/jpeg");
+var jpgLink = document.createElement("a");
+jpgLink.href = jpgImageData;
+jpgLink.download = "canvas_image.jpg";
+jpgLink.click();
+
+// 存為 PNG 檔案
+var pngImageData = canvas.toDataURL("image/png");
+var pngLink = document.createElement("a");
+pngLink.href = pngImageData;
+pngLink.download = "canvas_image.png";
+pngLink.click();*/
+
+ };
+var jseqlogo = {
+    "colors": {
+        "nucleotides": {"A": "green", "C": "blue", "G": "orange", "T": "red", "U": "red"},
+        "aminoacids": {
+            "D": "red", "E": "red",
+            "N": "green", "Q": "green", "S": "green", "G": "green", "T": "green", "Y": "green",
+            "R": "blue", "K": "blue", "H": "blue",
+        }
+    }
+};
+
+
+function convertToSequenceData(inputString) {
+    var lines =inputString.value.trim()
+    lines = lines.split("\n");
+    
+
+  var array = lines.map(function(line) {
+    // 檢查是否為空白行，如果是則跳過
+    if (line.trim() === "") {
+      return null;
+    }
+    // 將字串轉換為一個長度為10的陣列
+    return line.split("");
+  });
+
+  return calculateLetterFrequency(array);
+  //return array;
+}
+
+function calculateLetterFrequency(array) {
+  var frequency = {};
+
+  // 初始化字母頻率物件
+  for (var i = 0; i < array[0].length; i++) {
+    frequency[i] = {};
+  }
+
+  // 計算每一列的字母頻率
+  for (var row = 0; row < array.length; row++) {
+    for (var col = 0; col < array[row].length; col++) {
+      var letter = array[row][col];
+
+      if (frequency[col][letter]) {
+        // 如果字母已存在於頻率物件中，則將其頻率加1
+        frequency[col][letter]++;
+      } else {
+        // 如果字母不在頻率物件中，則將其頻率設為1
+        frequency[col][letter] = 1;
+      }
+    }
+  }
+
+  //return frequency;
+  return createArraysForDistinctLetters(frequency,array)
+}
+function createArraysForDistinctLetters(frequency,array) {
+  var distinctLetters = new Set();
+
+  // 找出不同的字母
+  for (var row = 0; row < array.length; row++) {
+    for (var col = 0; col < array[row].length; col++) {
+      var letter = array[row][col];
+      distinctLetters.add(letter);
+    }
+  }
+
+  // 為每個字母建立8個陣列
+  var letterArrays = new Map();
+  var arrays = [];
+  distinctLetters.forEach(function(letter) {
+    if(letter!=""){
+
+    for (var i = 0; i < array[0].length; i++) {
+      if(frequency[i][letter]>0){
+      arrays.push(frequency[i][letter]/array.length);
+    }
+      else{arrays.push(0)}
+    }
+
+    letterArrays.set(letter, arrays);
+    arrays = [];
+}
+  });
+  const result = {};
+  letterArrays .forEach((value, key) => {
+  result[key] = value;
+});
+  return result ;
+}
+function sequence_logo(element, width, height, columns, options) {
+    function range(n) {
+        var a = new Array(n);
+        for(var i = 0; i < a.length; i++) a[i] = i;
+        return a;
+    }
+
+    function sort_order(x) {
+        var order = range(x.length);
+        order.sort(function(a, b) { return x[a] - x[b]; });
+        return order;
+    }
+
+
+
+    
+
+    // Get setttings from options or default values.
+    var defaults = {
+        "colors": jseqlogo.colors.nucleotides,
+        "ylabel": "bits",
+        "textcolor": "black",
+        "bgcolor": "white",
+        "border": 28,
+        "padding": 6,
+        "labelfont": "14px Arial,sans-serif",
+        "letterfont": "30px Lucida Console,monospace",
+        "fontpixelheight": 24,
+        "ymax": 0,
+        "sort": true
+    };
+
+    var settings = {};
+    for(var p in defaults) {
+        settings[p] = (options[p] == null) ? defaults[p] : options[p];
+    }
+
+    var letters = Object.keys(columns);
+    var ncols = columns[letters[0]].length;
+
+    // collect stats on columns
+    var ymax = settings.ymax;
+    for(var i = 0; i < ncols; i++) {
+        var colsum = 0;
+        for(var j = 0; j < letters.length; j++) {
+            colsum += columns[letters[j]][i];
+        }
+        if(colsum > ymax) ymax = colsum;
+    }
+    var canvas = document.getElementById("sequence-logo-canvas");
+    canvas.width = 600;
+canvas.height = 200;
+  var ctx = canvas.getContext("2d");
+    //var ctx = element.getContext("2d");
+    ctx.save();
+
+    // draw the background
+    ctx.fillStyle = settings.bgcolor;
+    ctx.fillRect(0, 0, width, height);
+
+    // draw the letters
+    var columnx = settings.border;
+    var columndelta = (width - settings.border) / ncols;
+    var yheight = height - settings.border;
+    ctx.font = settings.letterfont;
+
+    for (var col = 0; col < ncols; col++) {
+        var totalweight = 0.0;
+        var lettery = yheight;
+
+        var values = letters.map(function(letter) { return columns[letter][col]; })
+        if(settings.sort) {
+            var order = sort_order(values);
+        } else {
+            var order = range(letters.length);
+        }
+
+        for(var i = 0; i < letters.length; i++) {
+            var letter = letters[order[i]];
+            var weight = columns[letter][col];
+
+            if(weight > 0) {
+                totalweight += weight;
+                ctx.save();
+                ctx.fillStyle = letter in settings.colors ? settings.colors[letter] : "black";
+                ctx.translate(columnx, lettery);
+                var scaley = (yheight * weight) / (settings.fontpixelheight * ymax);
+                var mt = ctx.measureText(letter);
+                var letterwidth = mt.width;
+                var scalex = columndelta / letterwidth;
+                ctx.scale(scalex, scaley);
+                ctx.fillText(letter, 0, 0);
+                ctx.restore();
+                lettery -= (weight * yheight) / ymax;
+            }
+        }
+
+        // x-axis labels
+        ctx.save();
+        ctx.fillStyle = settings.textcolor;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.font = settings.labelfont;
+        ctx.fillText((col + 1).toString(), columnx + columndelta/2, height-settings.border+settings.padding);
+        ctx.restore();
+        columnx += columndelta;
+    }
+
+    // y-axis labels
+    ctx.fillStyle = settings.textcolor;
+    ctx.font = settings.labelfont;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillText(ymax.toPrecision(1), settings.border-settings.padding, 0);
+    ctx.textBaseline = "bottom";
+    ctx.fillText("0", settings.border-settings.padding, height-settings.border);
+    ctx.translate(settings.border-settings.padding, (height-settings.border)/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(settings.ylabel, 0, 0);
+
+    ctx.restore();
+    return element;
+}
+</script>
